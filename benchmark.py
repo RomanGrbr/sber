@@ -1,21 +1,11 @@
-"""
-Benchmark for the HTTP records server.
-
-Usage:
-    python benchmark.py [--host 127.0.0.1] [--port 8080]
-                        [--requests 200] [--workers 20]
-"""
 import argparse
 import json
 import time
-import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 BASE_URL = ""  # set in main
 
-
-# ---------- HTTP helpers ----------
 
 def post_record(payload: dict) -> float:
     data = json.dumps(payload).encode()
@@ -47,8 +37,6 @@ def list_records(limit: int = 10, offset: int = 0) -> float:
     return time.perf_counter() - t0
 
 
-# ---------- stats ----------
-
 def percentile(sorted_data: list[float], p: float) -> float:
     if not sorted_data:
         return 0.0
@@ -64,19 +52,16 @@ def print_stats(name: str, latencies: list[float]) -> None:
     print(f"\n  {'='*40}")
     print(f"  {name}")
     print(f"  {'='*40}")
-    print(f"  requests : {len(s)}")
-    print(f"  RPS      : {rps:.1f}")
-    print(f"  avg      : {total/len(s)*1000:.1f} ms")
-    print(f"  p50      : {percentile(s, 50)*1000:.1f} ms")
-    print(f"  p95      : {percentile(s, 95)*1000:.1f} ms")
-    print(f"  p99      : {percentile(s, 99)*1000:.1f} ms")
-    print(f"  min/max  : {s[0]*1000:.1f} / {s[-1]*1000:.1f} ms")
+    print(f"  requests : {len(s)}")  # количество выполненных запросов
+    print(f"  RPS      : {rps:.1f}")  # запросов в секунду
+    print(f"  avg      : {total/len(s)*1000:.1f} ms")  # среднее время ответа
+    print(f"  p50      : {percentile(s, 50)*1000:.1f} ms")  # 50% запросов быстрее этого значения
+    print(f"  p95      : {percentile(s, 95)*1000:.1f} ms")  # 95% запросов быстрее этого значения
+    print(f"  p99      : {percentile(s, 99)*1000:.1f} ms")  # 99% запросов быстрее этого значения
+    print(f"  min/max  : {s[0]*1000:.1f} / {s[-1]*1000:.1f} ms")  # минимальное и максимальное время ответа
 
-
-# ---------- benchmark phases ----------
 
 def run_post(n: int, workers: int) -> list[str]:
-    """POST /records — returns list of created IDs."""
     latencies: list[float] = []
     ids: list[str] = []
     errors = 0
@@ -100,7 +85,6 @@ def run_post(n: int, workers: int) -> list[str]:
 
 
 def run_get(ids: list[str], workers: int) -> None:
-    """GET /records/:id — one request per created ID."""
     latencies: list[float] = []
     errors = 0
 
@@ -118,7 +102,6 @@ def run_get(ids: list[str], workers: int) -> None:
 
 
 def run_list(n: int, workers: int) -> None:
-    """GET /records?limit=10 — n requests."""
     latencies: list[float] = []
     errors = 0
 
@@ -135,7 +118,6 @@ def run_list(n: int, workers: int) -> None:
         print(f"  errors   : {errors}")
 
 
-# ---------- main ----------
 
 def main() -> None:
     global BASE_URL

@@ -31,7 +31,7 @@ lock = threading.RLock()
 
 
 class Handler(BaseHTTPRequestHandler):
-    def log_message(self, format, *args):  # noqa: A002
+    def log_message(self, format, *args):
         print(f"{self.address_string()} - {format % args}")
 
     def _read_json(self):
